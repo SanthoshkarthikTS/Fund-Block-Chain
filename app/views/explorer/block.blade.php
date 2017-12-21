@@ -8,7 +8,9 @@
 
     <section>
         <div class="container">
-            <h1>Bitcoin Block</h1>
+            @foreach ($details as $funds)
+            <h4><strong>{{$funds['name']}}</strong></h4>
+            @endforeach
             <div>{{$block['hash']}}</div>
         </div>
     </section>
@@ -17,10 +19,12 @@
         <div class="container">
             <h2 class="section-heading">Summary</h2>
             <div class="row">
-                <div class="three columns"><b>Block Time: </b>@datetime($block['block_time'])</div>
-                <div class="three columns"><b>Height:</b> {{$block['height']}}</div>
+            @foreach ($details as $funds)
+                <div class="three columns"><b>Date: </b>{{$funds['data'][0][0]}}</div>
+                <div class="three columns"><b>Net Express value:</b> {{$funds['data'][0][1]}}</div>
                 <div class="three columns"><b>Transactions:</b> {{$block['transactions']}}</div>
                 <div class="three columns"><b>Size:</b> {{$block['byte_size']}} bytes</div>
+            @endforeach
             </div>
             <div class="row">
                 <div class="three columns"><b>Confirmations:</b> {{$block['confirmations']}}</div>

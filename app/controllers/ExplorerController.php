@@ -73,7 +73,12 @@ class ExplorerController extends BaseController {
 
     public function showBlock($block)
     {
-        try {
+        
+        
+        try {           
+            $client = new GuzzleHttp\Client();
+            $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");        
+            $details = json_decode($shareDetails, true);
             //get the block data
             $blockInfo = $this->bitcoinClient->block($block);
             //get the block transactions
@@ -83,7 +88,7 @@ class ExplorerController extends BaseController {
             //create an instance of the Paginator for easy pagination of the results
             $transactions = Paginator::make($transactions['data'], $transactions['total'], $transactions['per_page']);
             
-            $data = array('block' => $blockInfo, 'transactions' => $transactions);
+            $data = array('details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
             return View::make('explorer.block', $data);
 
         } catch(Exception $e) {
