@@ -53,7 +53,9 @@ Route::group(['before' => 'auth.oncebasic'], function($router){
     Route::post('/webhook/{wallet_identity}', array('as' => 'webhook', 'uses' => 'WebhookController@webhookCalled'));
 });
 
+Route::post('/amount', array('as' => 'dashboard', 'uses' => 'HomeController@addBitCoin'));
 
+Route::post('/', array('as' => 'dashboard', 'uses' => 'HomeController@buyBitCoin'));
 
 Route::post('webhook-test', function() {
     //webhooks testing return whatever payload is sent

@@ -27,25 +27,27 @@
 
     <section>
         <div class="container">
-            <h3 class="section-heading">Latest Bitcoin Blocks</h3>
+            <h3 class="section-heading">List Of Funds Invested</h3>
             <table class="u-full-width blocks">
                 <thead>
                     <tr>
-                        <th><div>Height</div></th>
-                        <th><div>Time</div></th>
-                        <th><div>Transactions</div></th>
-                        <th><div>Size</div></th>
-                        <th><div></div></th>
+                        <th><div>User ID</div></th>
+                        <th><div>Industry ID</div></th>
+                        <th><div>Amount Invested</div></th>
+                        <th><div>NAV</div></th>
+                        <th><div>Units</div></th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($blocks['data'] as $block)
+                
+                    @foreach ($userFunds as $block)
                     <tr>
-                        <td>#{{$block['height']}}</td>
-                        <td>@datetime($block['block_time'])</td>
-                        <td>{{$block['transactions']}}</td>
-                        <td>{{$block['byte_size']}} bytes</td>
-                        <td><a href="{{ URL::route('block', $block['hash']) }}">View Block</a></td>
+                        <td>#{{$block['uid']}}</td>
+                        <!---td>@datetime($block['block_time'])</td-->
+                        <td>{{$block['mid']}}</td>
+                        <td>{{$block['amount']}}</td>
+                        <td>{{$block['NAV']}}</td>
+                        <td><a href="{{ URL::route('block', $block['id']) }}">View Block</a></td>
                     </tr>
                     @endforeach
                 </tbody>

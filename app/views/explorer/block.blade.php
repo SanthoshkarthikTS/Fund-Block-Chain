@@ -28,7 +28,31 @@
             </div>
             <div class="row">
                 <div class="three columns"><b>Confirmations:</b> {{$block['confirmations']}}</div>
-                <div class="three columns"><b>Orphaned:</b> {{$block['is_orphan'] ? 'yes' : 'no'}}</div>
+                <div class="three columns"><a href="#openModal">Invest</a></div>
+                
+                <div id="openModal" class="modalDialog">
+                    <div>
+                        <a href="#close" title="Close" class="close">X</a>
+                        <form id="loginForm" action="/whatever" method="post">
+                            <div class="row">
+                                <div class="seven columns">
+                                    <label for=""></label>
+                                    @foreach($walletDetails as $wallet) 
+                                    <input type="text" name="wallet" id="wallet" placeholder="Balance:{{$wallet}}BTC" disabled/>
+                                    @endforeach
+                                    @foreach ($details as $funds)
+                                    <input type="text" name="email" id="emailField" placeholder="name@example.com" value="{{$funds['data'][0][1] * $userFunds->units}}" readonly required/>
+                                    @endforeach
+                                    
+                                    <input type="text" name="Amount" id="amount" placeholder="Rs." required/>
+                                    
+                                    <button type="submit" class="button-primary">Invest</button>
+                                </div>
+                            </div>
+                        </form>    
+                    </div>
+                </div>
+
             </div>
             <div class="row margin-t">
                 <div class="three columns">
@@ -60,7 +84,7 @@
                         <table class="u-full-width fixed-header transactions">
                             <thead>
                                 <tr>
-                                    <th><div>Total Input</div></th>
+                                    <th><div>Total Investments</div></th>
                                     <th><div>Total Output</div></th>
                                     <th><div>Transaction Fee</div></th>
                                     <th></th>

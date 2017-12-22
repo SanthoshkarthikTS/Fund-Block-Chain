@@ -8,15 +8,91 @@ class ExplorerController extends BaseController {
         $this->bitcoinClient = $client;
     }
 
+    public function store() {
+        // $amount = Input::get('amount');
+         $block = 1;
+         $userFunds = UserMutual::findOrFail($block);
+         // echo "<pre>";
+         // print_r($userFunds); exit;
+         $transaction_history = new TransactionHistory();
+         // add other fields
+         $previousAmount = $userFunds->amount;
+         $withdraw = Input::get('amount');
+         $balance = $previousAmount - $withdraw;
+         
+         if($balance>0) {
+             $userFunds->amount = $balance;
+             $transaction_history->withdraw= $withdraw;
+             $transaction_history->transaction_at = date('Y-m-d H:i:s');
+             $transaction_history->uid = $userFunds['uid'];
+             $transaction_history->mid = $userFunds['mid'];
+             $transaction_history->save();
+             $userFunds->save();
+         } else {
+             // print_r("Minimum balance crossed");exit();
+             $data = array(
+                 "title" => "",
+                 "subtitle" => "An Error Ocurred",
+                 "message" => "Minimum balance crossed",
+             );
+             return View::make('error.general', $data);
+         }
+         
+     
+         return Redirect::route('explorer');
+     
+         //return "true";  
+     }
+     
+     public function storeInvest() {
+        // $amount = Input::get('amount');
+         $block = 1;
+         $userFunds = UserMutual::findOrFail($block);
+         $transaction_history = new TransactionHistory();
+         $previousAmount = $userFunds->amount;
+         $invest = Input::get('amount');
+         $balance = $previousAmount + $invest;
+         $userFunds->amount = $balance;
+         $transaction_history->invest= $invest;
+         $transaction_history->transaction_at = date('Y-m-d H:i:s');
+         $transaction_history->uid = $userFunds['uid'];
+         $transaction_history->mid = $userFunds['mid'];
+         $transaction_history->save();
+         $userFunds->save();
+         return Redirect::route('explorer');
+     
+         //return "true";  
+     }
+
+     public function history()
+     {
+         //get the latest few blocks
+         $transaction_history = TransactionHistory::with('user')->get();
+         $data = array('transaction_history' => $transaction_history);
+         // echo "<pre>";
+         // print_r($data); exit;
+         return View::make('history', $data);
+     
+     }
+
     public function showHome()
     {
         try {
+            $client = new GuzzleHttp\Client();
+            $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");
+            $details = json_decode($shareDetails, true);
             //get the latest few blocks
+            $userFunds = UserMutual::all();
+            $schemeDetails = Schemes::all();
+            
             $blocks = $this->bitcoinClient->allBlocks($page = 1, $limit = 5, $sortDir = 'desc');
 
+            $userFunds = UserMutual::all();
+
             //create the view, passing the data
-            $data = array('blocks' => $blocks);
+            $data = array('details' => $details, 'blocks' => $blocks, 'userFunds' => $userFunds, 'schemeDetails' => $schemeDetails,);
             return View::make('explorer.home', $data);
+            
 
         } catch(Exception $e) {
             $data = array(
@@ -79,16 +155,40 @@ class ExplorerController extends BaseController {
             $client = new GuzzleHttp\Client();
             $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");        
             $details = json_decode($shareDetails, true);
+
+            $users = DB::table('user_logs')->get();
             //get the block data
             $blockInfo = $this->bitcoinClient->block($block);
             //get the block transactions
             $page = Input::get('page', 1);
             $transactions = $this->bitcoinClient->blockTransactions($block, $page, $limit=20, $sortDir='desc');
-
+            
             //create an instance of the Paginator for easy pagination of the results
             $transactions = Paginator::make($transactions['data'], $transactions['total'], $transactions['per_page']);
             
-            $data = array('details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
+            //Wallet Amount
+            $user = User::find(Auth::user()->id);
+            $wallets = $user->wallets;
+            //lets also add up the balances of all wallets
+            $totalBalance = 0;
+            $totalUncBalance = 0;
+            $wallets->each(function($wallet) use(&$totalBalance, &$totalUncBalance){
+                $wallet->getBalance();
+                $totalBalance += $wallet->balance;
+                $totalUncBalance += $wallet->unc_balance;
+            });
+    
+            //get the user's transaction history (paginated)
+            $user->transactions = $user->transactions()->with(array('wallet' => function($query){
+                $query->select(['id', 'name']);
+            }))->orderBy('tx_time', 'desc')->paginate(10);
+    
+            $walletDetails = array(
+                'totalUncBalance' => $totalUncBalance,
+            );
+            $userFunds = UserMutual::find($block);
+            $data = array('userFunds' => $userFunds, 'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
+            
             return View::make('explorer.block', $data);
 
         } catch(Exception $e) {

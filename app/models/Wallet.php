@@ -101,7 +101,12 @@ class Wallet extends Eloquent {
 		if(!$this->liveWallet) {
 			$this->initLiveWallet();
 		}
-		list($this->balance, $this->unc_balance) = $this->liveWallet->getBalance();
+		list($this->balance, $this->unc_balance) = $this->liveWallet->getBalance();		
+		$userFunds = User::find(Auth::user()->id);
+		$uid = Auth::user()->id;
+		$userWallet = UserWallet::where('uid', '=', $uid)->first();
+		$this->balance = $userWallet->bitcoin;
+		$this->unc_balance = $userWallet->amount;
 	}
 
 	public function getNewAddress() {

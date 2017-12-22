@@ -24,17 +24,52 @@
             <hr/>
         </div>
     </section>
-
+       
     <section>
         <div class="container">
-            <h4 class="section-heading">Wallets</h4>
-            <p>You have <b>{{ $wallets->count() }}</b> wallets with a total balance of <span class="btc-value">@toBTC($totalBalance)</span> BTC</p>
+            <a href="#openModal" title="Close" class="button button-primary">Add Amount</a>
+            <div id="openModal" class="modalDialog">
+                <div>
+                <a href="#close" title="Close" class="close">X</a>
+                    <form id="loginForm" action="/amount" method="post">
+                    {{  Form::open(array('action'=>'HomeController@addBitCoin', 'method' => 'post')) }}
+                        <div class="row">
+                            <div class="seven columns">
+                            <label for="">Wallet</label>
+                            <td>{{  Form::text('coin', Input::old('coin'),  array('placeholder'=>'$'))  }}</td>
+                            <td>{{ Form::submit('Save', array('class' => 'button button-primary')) }}</td>
+                            </div>
+                        </div>
+                    {{  Form::close()  }} 
+                    </form>    
+                </div>
+            </div>
+            <a href="#BitCoin" title="Close" class="button button-default">Buy Bit Coin</a>
+            <div id="BitCoin" class="modalDialog">
+                <div>
+                <a href="#close" title="Close" class="close">X</a>
+                    <form id="loginForm" action="/" method="post">
+                    <!--https://blockchain.info/ticker-->
+                    {{  Form::open(array('action'=>'HomeController@buyBitCoin', 'method' => 'post')) }}
+                        <div class="row">
+                            <div class="seven columns">
+                            <label for="">Buy Bit Coin</label>
+                            <td>{{  Form::text('buyCoin', Input::old('buyCoin'),  array('placeholder'=>'$'))  }}</td>
+                            <td>{{ Form::submit('Buy', array('class' => 'button button-primary')) }}</td>
+                            </div>
+                        </div>
+                    {{  Form::close()  }} 
+                    </form>    
+                </div>
+            </div>
+            <h4 class="section-heading">Wallets</h4><!--@toBTC($totalBalance)-->
+            <p>You have <b>{{ $wallets->count() }}</b> wallets with a total balance of <span class="btc-value">{{$totalBalance}}</span> BTC</p>
             <table class="u-full-width blocks">
                 <thead>
                 <tr>
                     <th><div>Name</div></th>
-                    <th><div>Balance</div></th>
-                    <th><div>Pending Transactions</div></th>
+                    <th><div>BTC</div></th>
+                    <th><div>Wallet Amount</div></th>
                     <th><div></div></th>
                     <th><div></div></th>
                 </tr>
@@ -43,10 +78,10 @@
                 @foreach ($wallets as $key => $wallet)
                     <tr>
                         <td>{{ $wallet['name'] }}</td>
-                        <td><span class="btc-value">@toBTC($wallet['balance'])</span> BTC</td>
-                        <td><span class="btc-value">@toBTC($wallet['unc_balance'])</span> BTC</td>
+                        <td><span class="btc-value">{{$wallet['balance']}}</span> BTC</td>
+                        <td><span class="btc-value">{{$wallet['unc_balance']}}</span> $</td>
                         <td><a class="button" href="{{ URL::route('wallet.send', $wallet['id']) }}">Send Payment</a></td>
-                        <td><a class="button" href="{{ URL::route('wallet.receive', $wallet['id']) }}">Receive Payment</a></td>
+                        <td><a class="button" href="{{ URL::route('wallet.receive', $wallet['id']) }}">Receive Payment</a></td>                        
                     </tr>
                 @endforeach
                 </tbody>

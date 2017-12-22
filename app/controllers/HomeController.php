@@ -36,4 +36,33 @@ class HomeController extends BaseController {
 
 		return View::make('dashboard.home')->with($data);
 	}
+
+	public function addBitCoin() {
+		$coin = Input::get('coin');
+        $uid = Auth::user()->id;
+		$user = UserWallet::where('uid','=',$uid)->first();
+		$total_amount = $user->amount + $coin; 
+		$user_wallet = new UserWallet;
+		
+		UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $total_amount));
+
+		return Redirect::route('dashboard');
+	}
+
+	public function buyBitCoin() {		
+		$amount_given = Input::get('buyCoin');
+		$uid = Auth::user()->id;
+		$user = UserWallet::where('uid','=',$uid)->first();
+		$amount = $user->amount - $amount_given; 
+		$user_wallet = new UserWallet;
+		
+		$client = new GuzzleHttp\Client();
+		$shareDetails = file_get_contents("https://bitaps.com/api/ticker");
+		$details = json_decode($shareDetails, true);
+
+		$bitcoin_in_usd = $amount_given / $details['usd'] + $user->bitcoin;
+
+		UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $amount, 'bitcoin' => $bitcoin_in_usd));
+		return Redirect::route('dashboard');
+	}
 }
