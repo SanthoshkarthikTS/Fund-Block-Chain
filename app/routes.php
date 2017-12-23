@@ -57,6 +57,20 @@ Route::post('/amount', array('as' => 'dashboard', 'uses' => 'HomeController@addB
 
 Route::post('/', array('as' => 'dashboard', 'uses' => 'HomeController@buyBitCoin'));
 
+Route::get('/history', array('as' => 'history', 'uses' => 'ExplorerController@history'));
+
+Route::post('/investBTC', array('uses' => 'ExplorerController@investBitCoin'));
+
+Route::post('/withdrawBTC', array('uses' => 'ExplorerController@withdrawBitCoin'));
+
+Route::post('withdraw', 
+['as' => 'withdraw', 'uses' => 'ExplorerController@store']);
+
+Route::post('invest', 
+['as' => 'invest', 'uses' => 'ExplorerController@storeInvest']);
+
+Route::get('api/user-investment', 'UserController@getAllInvestment');
+
 Route::post('webhook-test', function() {
     //webhooks testing return whatever payload is sent
     $request = Request::instance();

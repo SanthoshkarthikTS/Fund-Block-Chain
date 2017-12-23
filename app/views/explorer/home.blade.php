@@ -39,17 +39,18 @@
                     </tr>
                 </thead>
                 <tbody>
-                
-                    @foreach ($userFunds as $block)
-                    <tr>
-                        <td>#{{$block['uid']}}</td>
-                        <!---td>@datetime($block['block_time'])</td-->
-                        <td>{{$block['mid']}}</td>
-                        <td>{{$block['amount']}}</td>
-                        <td>{{$block['NAV']}}</td>
-                        <td><a href="{{ URL::route('block', $block['id']) }}">View Block</a></td>
-                    </tr>
-                    @endforeach
+                    @if(count($userFunds) > 0)
+                        @foreach ($userFunds as $block)
+                        <tr>
+                            <td>#{{$block['uid']}}</td>
+                            <!---td>@datetime($block['block_time'])</td-->
+                            <td>{{$block['mid']}}</td>
+                            <td>{{$block['amount']}}</td>
+                            <td>{{$block['nav']}}</td>
+                            <td><a href="{{ URL::route('block', $block['mid']) }}">View Block</a></td>
+                        </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>

@@ -48,7 +48,7 @@ class ExplorerController extends BaseController {
         // $amount = Input::get('amount');
          $block = 1;
          $userFunds = UserMutual::findOrFail($block);
-         $transaction_history = new TransactionHistory();
+         //$transaction_history = new TransactionHistory();
          $previousAmount = $userFunds->amount;
          $invest = Input::get('amount');
          $balance = $previousAmount + $invest;
@@ -62,32 +62,22 @@ class ExplorerController extends BaseController {
          return Redirect::route('explorer');
      
          //return "true";  
-     }
-
-     public function history()
-     {
-         //get the latest few blocks
-         $transaction_history = TransactionHistory::with('user')->get();
-         $data = array('transaction_history' => $transaction_history);
-         // echo "<pre>";
-         // print_r($data); exit;
-         return View::make('history', $data);
-     
-     }
+     }     
 
     public function showHome()
     {
         try {
+            $uid = Auth::user()->id;  
+
             $client = new GuzzleHttp\Client();
             $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");
             $details = json_decode($shareDetails, true);
             //get the latest few blocks
-            $userFunds = UserMutual::all();
             $schemeDetails = Schemes::all();
             
             $blocks = $this->bitcoinClient->allBlocks($page = 1, $limit = 5, $sortDir = 'desc');
 
-            $userFunds = UserMutual::all();
+            $userFunds = UserMutual::where('uid', '=', $uid)->get();
 
             //create the view, passing the data
             $data = array('details' => $details, 'blocks' => $blocks, 'userFunds' => $userFunds, 'schemeDetails' => $schemeDetails,);
@@ -149,12 +139,15 @@ class ExplorerController extends BaseController {
 
     public function showBlock($block)
     {
-        
-        
-        try {           
-            $client = new GuzzleHttp\Client();
-            $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");        
-            $details = json_decode($shareDetails, true);
+       
+        try {    
+            $uid = Auth::user()->id;     
+            $userFunds = DB::table('user_mutual_fund')->where('uid', $uid)->where('mid', $block)->get();
+            $api = $userFunds[0]->api;
+
+            $client = new GuzzleHttp\Client();            
+            $shareDetails = file_get_contents($api);   
+            $details = json_decode($shareDetails, true);//;print_r($details['dataset']['data'][0][0]);    exit;
 
             $users = DB::table('user_logs')->get();
             //get the block data
@@ -184,10 +177,12 @@ class ExplorerController extends BaseController {
             }))->orderBy('tx_time', 'desc')->paginate(10);
     
             $walletDetails = array(
-                'totalUncBalance' => $totalUncBalance,
-            );
-            $userFunds = UserMutual::find($block);
-            $data = array('userFunds' => $userFunds, 'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
+                'totalUncBalance' => $totalBalance,
+            );                       
+            
+            $userFundsAmount = $userFunds[0]->amount;
+
+            $data = array('InvestedAmount' => $userFundsAmount,'currentMutualFund' => $block,'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
             
             return View::make('explorer.block', $data);
 
@@ -201,6 +196,94 @@ class ExplorerController extends BaseController {
         }
     }
 
+    public function investBitCoin()
+    {
+        
+        try {
+            $mid = Input::get('fundId');
+            $btc = Input::get('btc');
+            $uid = Auth::user()->id;
+
+            $userFunds = DB::table('user_mutual_fund')->where('uid', $uid)->where('mid', $mid)->get();
+            $api = $userFunds[0]->api;
+
+            $client = new GuzzleHttp\Client();            
+            $shareDetails = file_get_contents($api);   
+            $details = json_decode($shareDetails, true);
+
+            $Netvalue = $details['dataset']['data'][0][1];
+            
+            $userMutual = UserMutual::where('uid','=',$uid)->where('mid','=',$mid)->first();
+            $update_invest_amount = $userMutual->amount + $btc;
+
+            $userMutualFundUnits = $update_invest_amount / $Netvalue;
+
+            $user = UserWallet::where('uid','=',$uid)->first();
+            $update_btc = $user->bitcoin - $btc;
+
+            //DateTime of transaction
+            $transaction_at = date('Y-m-d H:i:s');
+            
+            UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
+            UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
+            
+            TransactionHistory::insert(array('invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+
+            return Redirect::route('explorer');
+
+        } catch(Exception $e) {
+            $data = array(
+                "title"    => "Bitcoin Transaction",
+                "subtitle" => "Could Not Get Transaction Data",
+                "message" => $e->getMessage(),
+            );
+            return View::make('error.general', $data);
+        }
+    }
+
+    public function withdrawBitCoin() {
+
+        try {
+            $mid = Input::get('fundId');
+            $btc = Input::get('btc');
+            $uid = Auth::user()->id;
+
+            $userFunds = DB::table('user_mutual_fund')->where('uid', $uid)->where('mid', $mid)->get();
+            $api = $userFunds[0]->api;
+
+            $client = new GuzzleHttp\Client();            
+            $shareDetails = file_get_contents($api);   
+            $details = json_decode($shareDetails, true);
+
+            $Netvalue = $details['dataset']['data'][0][1];
+            
+            $userMutual = UserMutual::where('uid','=',$uid)->where('mid','=',$mid)->first();
+            $update_invest_amount = $userMutual->amount - $btc;
+
+            $userMutualFundUnits = $update_invest_amount / $Netvalue;
+
+            $user = UserWallet::where('uid','=',$uid)->first();
+            $update_btc = $user->bitcoin + $btc;
+
+            //DateTime of transaction
+            $transaction_at = date('Y-m-d H:i:s');
+            
+            UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
+            UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
+            
+            TransactionHistory::insert(array('invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+
+            return Redirect::route('dashboard');
+            
+        } catch(Exception $e) {
+            $data = array(
+                "title"    => "Bitcoin Transaction",
+                "subtitle" => "Could Not Get Transaction Data",
+                "message" => $e->getMessage(),
+            );
+            return View::make('error.general', $data);
+        }
+    }
 
     public function search()
     {

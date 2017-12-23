@@ -27,12 +27,15 @@ class HomeController extends BaseController {
 			$query->select(['id', 'name']);
 		}))->orderBy('tx_time', 'desc')->paginate(10);
 
+		$transaction_history = TransactionHistory::all();
+
 		$data = array(
 			'wallets' => $wallets,
 			'transactions' => $user->transactions,
 			'totalBalance' => $totalBalance,
 			'totalUncBalance' => $totalUncBalance,
-		);
+			'transaction_history' => $transaction_history,
+		);		
 
 		return View::make('dashboard.home')->with($data);
 	}

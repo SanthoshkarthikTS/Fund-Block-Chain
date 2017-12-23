@@ -100,43 +100,36 @@
                     <thead>
                     <tr>
                         <th><div>Date</div></th>
-                        <th><div>Info</div></th>
+                        <th><div>User Id</div></th>
                         <th><div>Amount</div></th>
-                        <th><div>Confirmations</div></th>
-                        <th></th>
+                        <th><div>Mutual Fund Id</div></th>
+                        <th><div>Withdrawn</div></th>
                     </tr>
                     </thead>
                     <tfoot>
                     <tr>
                         <td>Date</td>
-                        <td>Info</td>
+                        <td>User Id</td>
                         <td>Amount</td>
-                        <td>Confirmations</td>
-                        <td></td>
+                        <td>Mutual Fund Id</td>
+                        <td>Withdrawn</td>
                     </tr>
                     </tfoot>
                     <tbody>
-                    @foreach ($transactions as $tx)
+                    @foreach ($transaction_history as $tx)
                         <tr>
-                            <td>@datetime($tx['created_at'])</td>
+                            <td>@datetime($tx['transaction_at'])</td>
                             <td>
-                                @if($tx['direction'] == "sent")
-                                Sent from <b>{{ $tx['wallet']['name'] }}</b> to <a href="{{ URL::route('address', $tx['recipient']) }}">{{ substr($tx['recipient'], 0, 8)}}</a>...
-                                @elseif($tx['direction'] == "received")
-                                Receieved into <b>{{ $tx['wallet']['name'] }}</b>
-                                @elseif($tx['direction'] == "internal")
-                                    Internal transaction with <b>{{ $tx['wallet']['name'] }}</b>: <a href="{{ URL::route('address', $tx['recipient']) }}">{{ substr($tx['recipient'], 0, 8)}}</a>
-                                @endif
+                               {{$tx['uid']}}
                             </td>
-                            <td class="{{ $tx['amount'] > 0 ? 'output' : 'input' }}"><span class="btc-value">@toBTC($tx['amount'])</span> BTC</td>
-                            <td>{{ $tx['confirmations'] }}</td>
-                            <td><a href="{{ URL::route('transaction', $tx['tx_hash']) }}">view transaction</a> </td>
+                            <td><span class="btc-value">{{$tx['invest']}}</span> BTC</td>
+                            <td>{{ $tx['mid'] }}</td>
+                            <td>{{ $tx['withdraw'] }}</td>
                         </tr>
                     @endforeach
                     </tbody>
                 </table>
             </div>
-            {{ $transactions->fragment('history')->links() }}
 
         </div>
     </section>
