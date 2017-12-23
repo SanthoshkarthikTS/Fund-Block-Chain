@@ -119,9 +119,7 @@
                     @foreach ($transaction_history as $tx)
                         <tr>
                             <td>@datetime($tx['transaction_at'])</td>
-                            <td>
-                               {{$tx['uid']}}
-                            </td>
+                            <td>{{$tx['uid']}}</td>
                             <td><span class="btc-value">{{$tx['invest']}}</span> BTC</td>
                             <td>{{ $tx['mid'] }}</td>
                             <td>{{ $tx['withdraw'] }}</td>

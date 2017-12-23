@@ -6,6 +6,38 @@
 
 @section('content')
 
+<section>
+    <div class="container">
+        <h3 class="section-heading">Trusted investers</h3>
+        <table class="u-full-width blocks">
+            <thead>
+                <tr>
+                    <th><div>Name</div></th>
+                    <th><div>Location</div></th>
+                    <th><div>Amount</div></th>
+                    <th><div>Invest</div></th>
+                </tr>
+            </thead>
+            <tbody>
+
+                @foreach ($schemeDetails as $block)
+                    <tr>
+                        <td>{{$block['name']}}</td>
+                        <td>{{$block['location']}}</td>
+                        <form id="investForm" action="scheme" method="post">
+                            <input type="hidden" value="{{$block['id']}}" name="uid">
+                            <input type="hidden"  value="{{$block['id']}}"  name="mid" placeholder="BTC">
+                            <td><input type="text" style="width:60px;height:20px" name="scheme"></td>
+                            <td><button type="submit" class="button-primary">invest </button></td>
+                        </form>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</section>
+
+
     <section>
         <div class="container">
             <h1>A Simple Block Explorer</h1>
@@ -43,8 +75,7 @@
                         @foreach ($userFunds as $block)
                         <tr>
                             <td>#{{$block['uid']}}</td>
-                            <!---td>@datetime($block['block_time'])</td-->
-                            <td>{{$block['mid']}}</td>
+                            <td>{{$block['name']}}</td>
                             <td>{{$block['amount']}}</td>
                             <td>{{$block['nav']}}</td>
                             <td><a href="{{ URL::route('block', $block['mid']) }}">View Block</a></td>

@@ -63,6 +63,8 @@ Route::post('/investBTC', array('uses' => 'ExplorerController@investBitCoin'));
 
 Route::post('/withdrawBTC', array('uses' => 'ExplorerController@withdrawBitCoin'));
 
+Route::post('scheme', array('as' => 'scheme', 'uses' => 'ExplorerController@scheme'));
+
 Route::post('withdraw', 
 ['as' => 'withdraw', 'uses' => 'ExplorerController@store']);
 

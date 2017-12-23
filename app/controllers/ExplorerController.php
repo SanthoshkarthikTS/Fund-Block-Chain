@@ -67,11 +67,8 @@ class ExplorerController extends BaseController {
     public function showHome()
     {
         try {
-            $uid = Auth::user()->id;  
-
-            $client = new GuzzleHttp\Client();
-            $shareDetails = file_get_contents("https://www.quandl.com/api/v3/datasets/AMFI/142014.json?api_key=JAvVoWLCx4sxcL2Y3hM1");
-            $details = json_decode($shareDetails, true);
+            $uid = Auth::user()->id;   
+            
             //get the latest few blocks
             $schemeDetails = Schemes::all();
             
@@ -79,8 +76,12 @@ class ExplorerController extends BaseController {
 
             $userFunds = UserMutual::where('uid', '=', $uid)->get();
 
+            $select = DB::table('user_mutual_fund')->select('mid')->where('uid', '=', $uid)->get();
+
+            $finalMid = json_decode( json_encode($select), true);
+
             //create the view, passing the data
-            $data = array('details' => $details, 'blocks' => $blocks, 'userFunds' => $userFunds, 'schemeDetails' => $schemeDetails,);
+            $data = array('fundId' => $finalMid, 'blocks' => $blocks, 'userFunds' => $userFunds, 'schemeDetails' => $schemeDetails);
             return View::make('explorer.home', $data);
             
 
@@ -143,11 +144,13 @@ class ExplorerController extends BaseController {
         try {    
             $uid = Auth::user()->id;     
             $userFunds = DB::table('user_mutual_fund')->where('uid', $uid)->where('mid', $block)->get();
-            $api = $userFunds[0]->api;
+
+            $schemes = DB::table('schemes')->where('id', $block)->get();
+            $api = $schemes[0]->api;
 
             $client = new GuzzleHttp\Client();            
             $shareDetails = file_get_contents($api);   
-            $details = json_decode($shareDetails, true);//;print_r($details['dataset']['data'][0][0]);    exit;
+            $details = json_decode($shareDetails, true);
 
             $users = DB::table('user_logs')->get();
             //get the block data
@@ -180,7 +183,7 @@ class ExplorerController extends BaseController {
                 'totalUncBalance' => $totalBalance,
             );                       
             
-            $userFundsAmount = $userFunds[0]->amount;
+            $userFundsAmount = $userFunds[0]->amount;            
 
             $data = array('InvestedAmount' => $userFundsAmount,'currentMutualFund' => $block,'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
             
@@ -271,7 +274,7 @@ class ExplorerController extends BaseController {
             UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
             UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
             
-            TransactionHistory::insert(array('invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+            TransactionHistory::insert(array('withdraw' => $btc, 'invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
             return Redirect::route('dashboard');
             
@@ -283,6 +286,33 @@ class ExplorerController extends BaseController {
             );
             return View::make('error.general', $data);
         }
+    }
+
+    public function scheme() {
+        $amount = Input::get('scheme');
+        $mid = Input::get('mid');
+        $uid = Auth::user()->id;
+        $userFunds = DB::table('schemes')->where('id', $mid)->get();
+
+        //Funds Name
+        $fundName = $userFunds[0]->name;
+
+        //API  
+        $api = $userFunds[0]->api;
+      
+        //Net asset value
+        $client = new GuzzleHttp\Client();            
+        $shareDetails = file_get_contents($api);   
+        $details = json_decode($shareDetails, true);
+        $Netvalue = $details['dataset']['data'][0][1];
+
+        //Units
+        $units = $amount / $Netvalue;
+
+        UserMutual::insert(array('name' => $fundName, 'uid' => $uid, 'mid' => $mid, 'amount' => $amount, 'api' => $api, 'nav' => $Netvalue, 'units' => $units));
+        
+        return Redirect::route('explorer');
+       
     }
 
     public function search()
