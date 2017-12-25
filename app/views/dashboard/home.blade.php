@@ -122,7 +122,7 @@
                             <td>{{$tx['uid']}}</td>
                             <td><span class="btc-value">{{$tx['invest']}}</span> BTC</td>
                             <td>{{ $tx['mid'] }}</td>
-                            <td>{{ $tx['withdraw'] }}</td>
+                            <td><span class="btc-value">{{ $tx['withdraw'] }}</span> BTC</td>
                         </tr>
                     @endforeach
                     </tbody>

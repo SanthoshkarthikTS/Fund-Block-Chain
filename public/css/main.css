@@ -248,3 +248,42 @@ code.backup-mnemonic {
 .close:hover {
     background: #00d9ff;
 }
+
+.div-table {
+    display: table;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #666666;
+    border-spacing: 5px;
+    /* cellspacing:poor IE support for  this */
+}
+
+.div-table-row {
+    display: table-row;
+    width: 100%;
+    clear: both;
+}
+
+.div-table-col {
+    float: left;
+    /* fix for  buggy browsers */
+    display: table-column;
+    width: 100px;
+    background-color: white;
+    text-align: center;
+}
+
+.div-table-col.heading {
+    background-color: #ccc;
+}
+
+.div-table-col:last-child {
+    width: 365px;
+    word-wrap: break-word;
+}
+
+.div-table-col:nth-child(4) {
+    width: 275px;
+    word-wrap: break-word;
+    padding-right: 10px;
+}

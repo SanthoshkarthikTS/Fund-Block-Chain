@@ -234,6 +234,8 @@ class ExplorerController extends BaseController {
             
             TransactionHistory::insert(array('invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
+            $this->addUserBlock($mid, $uid, $btc);
+            
             return Redirect::route('explorer');
 
         } catch(Exception $e) {
@@ -278,6 +280,8 @@ class ExplorerController extends BaseController {
             
             TransactionHistory::insert(array('withdraw' => $btc,  'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
+            $this->addUserBlock($mid, $uid, 0 , $btc);
+            
             return Redirect::route('dashboard');
             
         } catch(Exception $e) {
@@ -290,6 +294,70 @@ class ExplorerController extends BaseController {
         }
     }
 
+    public function addUserBlock($sid, $uid, $inv_amt, $withdraw=0, $jsonData='') {
+
+		$user_id = Auth::user()->id;
+		
+		$scheme = UserMutualBlock::where('sid', $sid)->where('uid', $uid)->get();
+		
+		if(sizeof($scheme) > 0) {
+		
+			$amount = $scheme[0]->amount;
+            if($withdraw > 0) {
+                UserMutualBlock::where('sid', $sid)->where('uid', $uid)->update(array('amount'=> $amount - $withdraw));    
+            } else {
+                UserMutualBlock::where('sid', $sid)->where('uid', $uid)->update(array('amount'=> $amount + $inv_amt));
+            }
+		
+		} else {
+		
+		$sqlQuery = "SELECT `index` FROM  `userMutualBlock` WHERE  `sid` =$sid ORDER BY  `userMutualBlock`.`index` DESC LIMIT 1";	
+		
+		$index = DB::select(DB::raw($sqlQuery));
+		
+		$indexArray = json_decode(json_encode($index),true);
+		
+		$index = $indexArray[0]['index'];
+		
+		if($index >= 0) {	
+			$index++;
+		}	
+		
+		$block = new BlockChainController();
+		
+		$date =date('Y-m-d');
+
+		$jsonData = array(
+			"user_id" => $uid,
+			"scheme_id" => $sid ,
+			"amount" => $inv_amt,
+		);
+		
+		$blocks = UserMutualBlock::where('sid',$sid)->orderby('index', 'ASC')->get();
+		$blockArray = json_decode($blocks);
+		foreach($blockArray as $key=>$value){
+			if($key > 0) {
+				$existData = array(
+					"user_id" => $value->uid,
+					"scheme_id" => $value->sid ,
+					"amount" => $value->amount,
+				);
+				$block->addBlock(new BlockController($value->index, $value->created_at, json_decode(json_encode($existData))));
+			}
+		}
+		
+		$block->addBlock(new BlockController($index, $date, json_decode(json_encode($jsonData))));
+		$schemeDetails = new UserMutualBlock();
+		$schemeDetails->index = $index;
+		$schemeDetails->uid = $uid;
+		$schemeDetails->sid = $sid;
+		$schemeDetails->amount = $inv_amt;
+		$schemeDetails->save();
+		
+        return json_encode($block,null,5);
+		}
+    }
+    
     public function scheme() {
         $amount = Input::get('scheme');
         $mid = Input::get('mid');
@@ -318,7 +386,10 @@ class ExplorerController extends BaseController {
         UserWallet::where('uid', '=', $uid)->update(array('bitcoin' =>  $deducted_amount));
         UserMutual::insert(array('name' => $fundName, 'uid' => $uid, 'mid' => $mid, 'amount' => $amount, 'api' => $api, 'nav' => $Netvalue, 'units' => $units));
         TransactionHistory::insert(array('invest' => $amount, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
-        return Redirect::route('explorer');
+        
+        $blockChain = json_decode($this->addUserBlock($mid, $uid, $amount),true);
+
+        return View::make('blockchain.blockchain', array('chain' => $blockChain['chain']));
        
     }
 

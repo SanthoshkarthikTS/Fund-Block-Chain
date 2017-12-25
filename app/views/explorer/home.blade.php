@@ -14,7 +14,7 @@
                 <tr>
                     <th><div>Name</div></th>
                     <th><div>Location</div></th>
-                    <th><div>Amount</div></th>
+                    <th><div>BTC</div></th>
                     <th><div>Invest</div></th>
                 </tr>
             </thead>
@@ -65,7 +65,7 @@
                     <tr>
                         <th><div>User ID</div></th>
                         <th><div>Industry ID</div></th>
-                        <th><div>Amount Invested</div></th>
+                        <th><div>BTC Invested</div></th>
                         <th><div>NAV</div></th>
                         <th><div>Units</div></th>
                         <th><div>Links</div></th>
