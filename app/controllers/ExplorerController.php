@@ -70,7 +70,10 @@ class ExplorerController extends BaseController {
             $uid = Auth::user()->id;   
             
             //get the latest few blocks
-            $schemeDetails = Schemes::all();
+            $sqlQuery = "SELECT * FROM `schemes` WHERE id NOT IN (SELECT DISTINCT(mid) FROM `user_mutual_fund` WHERE uid = $uid)";
+            $filterSchemeDetails = DB::select(DB::raw($sqlQuery));
+
+            $schemeDetails = json_decode( json_encode($filterSchemeDetails), true);
             
             $blocks = $this->bitcoinClient->allBlocks($page = 1, $limit = 5, $sortDir = 'desc');
 
@@ -215,7 +218,6 @@ class ExplorerController extends BaseController {
             $details = json_decode($shareDetails, true);
 
             $Netvalue = $details['dataset']['data'][0][1];
-            
             $userMutual = UserMutual::where('uid','=',$uid)->where('mid','=',$mid)->first();
             $update_invest_amount = $userMutual->amount + $btc;
 
@@ -274,7 +276,7 @@ class ExplorerController extends BaseController {
             UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
             UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
             
-            TransactionHistory::insert(array('withdraw' => $btc, 'invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+            TransactionHistory::insert(array('withdraw' => $btc,  'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
             return Redirect::route('dashboard');
             
@@ -299,7 +301,7 @@ class ExplorerController extends BaseController {
 
         //API  
         $api = $userFunds[0]->api;
-      
+
         //Net asset value
         $client = new GuzzleHttp\Client();            
         $shareDetails = file_get_contents($api);   
@@ -309,8 +311,13 @@ class ExplorerController extends BaseController {
         //Units
         $units = $amount / $Netvalue;
 
+        $transaction_at = date('Y-m-d H:i:s');
+
+        $user = UserWallet::where('uid','=',$uid)->first();
+        $deducted_amount = $user->bitcoin - $amount; 
+        UserWallet::where('uid', '=', $uid)->update(array('bitcoin' =>  $deducted_amount));
         UserMutual::insert(array('name' => $fundName, 'uid' => $uid, 'mid' => $mid, 'amount' => $amount, 'api' => $api, 'nav' => $Netvalue, 'units' => $units));
-        
+        TransactionHistory::insert(array('invest' => $amount, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
         return Redirect::route('explorer');
        
     }

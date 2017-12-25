@@ -11,7 +11,8 @@ class HomeController extends BaseController {
 	public function showDashboard()
 	{
 		//get the user's wallets and their balances
-		$user = User::find(Auth::user()->id);
+		$uid = Auth::user()->id;
+		$user = User::find($uid);
 		$wallets = $user->wallets;
 		//lets also add up the balances of all wallets
 		$totalBalance = 0;
@@ -27,7 +28,8 @@ class HomeController extends BaseController {
 			$query->select(['id', 'name']);
 		}))->orderBy('tx_time', 'desc')->paginate(10);
 
-		$transaction_history = TransactionHistory::all();
+		$transaction_history = TransactionHistory::where('uid','=',$uid)->get();
+		//print_r($transaction_history);exit;
 
 		$data = array(
 			'wallets' => $wallets,
@@ -44,10 +46,18 @@ class HomeController extends BaseController {
 		$coin = Input::get('coin');
         $uid = Auth::user()->id;
 		$user = UserWallet::where('uid','=',$uid)->first();
-		$total_amount = $user->amount + $coin; 
-		$user_wallet = new UserWallet;
+		if(!empty($user)) {
+			$total_amount = $user->amount + $coin; 
+			$user_wallet = new UserWallet;
+			
+			UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $total_amount));
+		} else {
+			$total_amount = $coin; 
+			$user_wallet = new UserWallet;
+
+			UserWallet::insert(array('uid' => $uid,'amount' =>  $total_amount));
+		}
 		
-		UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $total_amount));
 
 		return Redirect::route('dashboard');
 	}
@@ -56,16 +66,19 @@ class HomeController extends BaseController {
 		$amount_given = Input::get('buyCoin');
 		$uid = Auth::user()->id;
 		$user = UserWallet::where('uid','=',$uid)->first();
-		$amount = $user->amount - $amount_given; 
-		$user_wallet = new UserWallet;
+		if(!empty($user)) {
+			$amount = $user->amount - $amount_given; 
+			$user_wallet = new UserWallet;
+			
+			$client = new GuzzleHttp\Client();
+			$shareDetails = file_get_contents("https://bitaps.com/api/ticker");
+			$details = json_decode($shareDetails, true);
+	
+			$bitcoin_in_usd = $amount_given / $details['usd'] + $user->bitcoin;
+	
+			UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $amount, 'bitcoin' => $bitcoin_in_usd));
+		}
 		
-		$client = new GuzzleHttp\Client();
-		$shareDetails = file_get_contents("https://bitaps.com/api/ticker");
-		$details = json_decode($shareDetails, true);
-
-		$bitcoin_in_usd = $amount_given / $details['usd'] + $user->bitcoin;
-
-		UserWallet::where('uid', '=', $uid)->update(array('amount' =>  $amount, 'bitcoin' => $bitcoin_in_usd));
 		return Redirect::route('dashboard');
 	}
 }

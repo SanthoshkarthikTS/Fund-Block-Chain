@@ -68,6 +68,7 @@
                         <th><div>Amount Invested</div></th>
                         <th><div>NAV</div></th>
                         <th><div>Units</div></th>
+                        <th><div>Links</div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -78,6 +79,7 @@
                             <td>{{$block['name']}}</td>
                             <td>{{$block['amount']}}</td>
                             <td>{{$block['nav']}}</td>
+                            <td>{{$block['units']}}</td>
                             <td><a href="{{ URL::route('block', $block['mid']) }}">View Block</a></td>
                         </tr>
                         @endforeach

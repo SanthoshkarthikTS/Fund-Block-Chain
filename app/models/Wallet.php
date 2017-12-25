@@ -105,8 +105,12 @@ class Wallet extends Eloquent {
 		$userFunds = User::find(Auth::user()->id);
 		$uid = Auth::user()->id;
 		$userWallet = UserWallet::where('uid', '=', $uid)->first();
-		$this->balance = $userWallet->bitcoin;
-		$this->unc_balance = $userWallet->amount;
+		if(!empty($userWallet)) {
+			$this->balance = $userWallet->bitcoin;
+			$this->unc_balance = $userWallet->amount;
+		}
+		
+		
 	}
 
 	public function getNewAddress() {
