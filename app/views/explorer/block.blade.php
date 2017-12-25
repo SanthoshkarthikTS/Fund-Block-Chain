@@ -17,12 +17,12 @@
     <section>
         <div class="container">
             <h2 class="section-heading">Summary</h2>
-            <div class="row">
+            <!-- <div class="row">
             @foreach ($details as $funds)
                 <div class="three columns"><b>Date: </b>{{$funds['data'][0][0]}}</div>
                 <div class="three columns"><b>Net Express value:</b> {{$funds['data'][0][1]}}</div>
             @endforeach
-            </div>
+            </div> -->
             <div class="row">
                 <div class="three columns"><a href="#openModal"><button class="button button-primary">Invest</button></a></div>
                 
@@ -90,11 +90,11 @@
                 <td >{{number_format($total/$count,3, '.', ',')}}</td>
                 <td>{{$current_nav}}</td>
                 <td >{{$investment - $withdraw}}</td>
-                <td>{{number_format($current_nav*$total,4, '.', ',')}}</td>
+                <td><strong>{{number_format($current_nav*$total,4, '.', ',')}}</strong></td>
                 @if(($current_nav*$total) > ($investment - $withdraw))
-                <td style="color: green">{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</td>
+                <td style="color: green"><strong>{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</strong></td>
                 @else
-                <td style="color: red">{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</td>
+                <td style="color: red"><strong>{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</strong></td>
                 @endif
             </tr>
         </table>
