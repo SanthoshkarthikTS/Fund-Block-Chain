@@ -188,7 +188,14 @@ class ExplorerController extends BaseController {
             
             $userFundsAmount = $userFunds[0]->amount;            
 
-            $data = array('InvestedAmount' => $userFundsAmount,'currentMutualFund' => $block,'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
+            $transaction_history = TransactionHistory::all();            
+            $count = TransactionHistory::count('nav');
+            $total = TransactionHistory::sum('nav');
+            $investment = TransactionHistory::sum('invest');
+            $withdraw = TransactionHistory::sum('withdraw');
+            $current_nav = $details['dataset']['data'][1][1];
+            
+            $data = array('current_nav'=>$current_nav, 'count'=>$count,'total'=>$total ,'investment'=>$investment, 'withdraw'=>$withdraw,'InvestedAmount' => $userFundsAmount,'currentMutualFund' => $block,'walletDetails' => $walletDetails,'details' => $details, 'block' => $blockInfo, 'transactions' => $transactions);
             
             return View::make('explorer.block', $data);
 
@@ -232,7 +239,7 @@ class ExplorerController extends BaseController {
             UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
             UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
             
-            TransactionHistory::insert(array('invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+            TransactionHistory::insert(array('nav' => $Netvalue, 'invest' => $btc, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
             $this->addUserBlock($mid, $uid, $btc);
             
@@ -278,7 +285,7 @@ class ExplorerController extends BaseController {
             UserWallet::where('uid', '=', $uid)->update(array('bitcoin' => $update_btc));
             UserMutual::where('uid', '=', $uid)->where('mid','=',$mid)->update(array('units' => $update_invest_amount, 'nav' => $Netvalue, 'units' => $userMutualFundUnits, 'amount' => $update_invest_amount));
             
-            TransactionHistory::insert(array('withdraw' => $btc,  'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+            TransactionHistory::insert(array('nav' => $Netvalue, 'withdraw' => $btc,  'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
 
             $this->addUserBlock($mid, $uid, 0 , $btc);
             
@@ -385,7 +392,7 @@ class ExplorerController extends BaseController {
         $deducted_amount = $user->bitcoin - $amount; 
         UserWallet::where('uid', '=', $uid)->update(array('bitcoin' =>  $deducted_amount));
         UserMutual::insert(array('name' => $fundName, 'uid' => $uid, 'mid' => $mid, 'amount' => $amount, 'api' => $api, 'nav' => $Netvalue, 'units' => $units));
-        TransactionHistory::insert(array('invest' => $amount, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
+        TransactionHistory::insert(array('nav' => $Netvalue, 'invest' => $amount, 'uid' => $uid, 'mid' => $mid, 'transaction_at' => $transaction_at));
         
         $blockChain = json_decode($this->addUserBlock($mid, $uid, $amount),true);
 

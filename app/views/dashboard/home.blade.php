@@ -110,7 +110,7 @@
                     <tr>
                         <td>Date</td>
                         <td>User Id</td>
-                        <td>Amount</td>
+                        <td>Invested</td>
                         <td>Mutual Fund Id</td>
                         <td>Withdrawn</td>
                     </tr>

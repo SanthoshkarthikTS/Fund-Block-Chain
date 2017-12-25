@@ -75,5 +75,30 @@
                 </div>
             </div>
         </div>
+        <div class="container">
+        <table class="myOtherTable">
+            <tr>
+                <th style="width: 10%;"">Units</th>
+                <th style="width: 10%;"">Avg NAV</th>
+                <th style="width: 10%;"">Current NAV</th>
+                <th style="width: 10%;"">Investment</th>
+                <th style="width: 10%;"">Current Unit Balance</th>
+                <th style="width: 10%;"">P&L</th>
+            </tr>
+            <tr>
+                <td >{{number_format($total,3, '.', ',')}}</td>
+                <td >{{number_format($total/$count,3, '.', ',')}}</td>
+                <td>{{$current_nav}}</td>
+                <td >{{$investment - $withdraw}}</td>
+                <td>{{number_format($current_nav*$total,4, '.', ',')}}</td>
+                @if(($current_nav*$total) > ($investment - $withdraw))
+                <td style="color: green">{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</td>
+                @else
+                <td style="color: red">{{number_format(($current_nav*$total)-($investment - $withdraw),3,'.', ',')}}</td>
+                @endif
+            </tr>
+        </table>
+</div>
+
     </section>
 @stop
